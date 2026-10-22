@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#21143e">
+<title>Не забудь забрать с форума! | PMI Astana Forum</title>
+<style>
+:root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:#fff;background:#21143e;--gap:clamp(6px,1.2vmin,11px)}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden}body{background:radial-gradient(ellipse at 50% 5%,#493078 0%,#21143e 68%);touch-action:manipulation}
+.app{height:100vh;height:100dvh;min-height:0;display:flex;flex-direction:column;align-items:center;padding: max(8px,env(safe-area-inset-top)) 12px max(8px,env(safe-area-inset-bottom));gap:clamp(6px,1.3vh,14px)}
+header{text-align:center;flex:none;width:100%;max-width:440px}header .eyebrow{font-size:clamp(10px,1.5vh,13px);font-weight:700;letter-spacing:.12em;color:#d4bfff;margin:0 0 5px}h1{font-size:clamp(19px,3.2vh,29px);line-height:1.08;margin:0 0 5px;letter-spacing:-.03em}header .sub{color:#d9cde9;font-size:clamp(12px,1.75vh,15px);margin:0}
+.status{width:100%;max-width:420px;display:flex;align-items:center;gap:10px;flex:none;font-size:clamp(11px,1.5vh,14px);color:#ded2f2}.track{height:7px;background:#655188;border-radius:40px;overflow:hidden;flex:1}.fill{width:0;height:100%;background:#f5cc60;transition:width .25s}
+.board-wrap{flex:1;min-height:0;min-width:0;width:100%;display:flex;justify-content:center;align-items:center}.board{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(4,1fr);gap:var(--gap);width:min(calc((100dvh - 165px)*.72),calc(100vw - 26px),420px);max-height:100%;aspect-ratio:3/4}
+.card{position:relative;border:0;padding:0;border-radius:clamp(9px,2vmin,16px);color:white;background:#6244a7;box-shadow:0 3px 0 #3b286e;cursor:pointer;overflow:hidden;display:grid;place-items:center;transition:background .18s,transform .16s;min-width:0;min-height:0;-webkit-tap-highlight-color:transparent}.card:active{transform:scale(.96)}.card:focus-visible{outline:3px solid #ffd670;outline-offset:2px}.card .back{font-size:clamp(20px,5vmin,33px);font-weight:800;color:#d7c5ff}.card .face{display:none;flex-direction:column;justify-content:center;align-items:center;gap:4px;padding:3px;width:100%;height:100%;background:#f7f2ff;color:#30214b}.card .symbol{font-size:clamp(19px,5.5vmin,35px);line-height:1}.card .name{font-size:clamp(9px,2.5vmin,14px);font-weight:750;line-height:1.05;text-align:center;overflow-wrap:anywhere}.card.revealed .back,.card.matched .back{display:none}.card.revealed .face,.card.matched .face{display:flex}.card.matched .face{background:#e7d9a4;color:#33234a}.card.matched{box-shadow:0 2px 0 #947b38;cursor:default}
+footer{flex:none;text-align:center;font-size:clamp(10px,1.4vh,12px);color:#c4b5da}
+.overlay{position:fixed;inset:0;z-index:5;background:rgba(13,8,29,.76);display:none;align-items:center;justify-content:center;padding:20px;padding-top:max(20px,env(safe-area-inset-top));padding-bottom:max(20px,env(safe-area-inset-bottom))}.overlay.show{display:flex}.reward{width:min(100%,355px);max-height:90dvh;overflow:auto;background:#fff;color:#2c2042;border-radius:24px;padding:25px 22px 20px;text-align:center;box-shadow:0 18px 65px #1009238c}.reward .kicker{font-size:13px;color:#7153ae;font-weight:800;letter-spacing:.04em}.reward .big-icon{font-size:65px;line-height:1.2;margin:13px 0 9px}.reward h2{font-size:clamp(23px,5vh,30px);line-height:1.13;margin:0 0 14px}.reward .joke{font-size:clamp(16px,2.6vh,19px);line-height:1.45;margin:0 0 19px}.continue{display:block;width:100%;border:0;border-radius:12px;background:#633ea7;color:white;font-weight:800;font-size:16px;padding:14px;cursor:pointer}.reward .hint{color:#82768c;font-size:12px;margin:10px 0 0}
+@media(max-height:650px){.app{gap:5px}header .eyebrow{margin-bottom:2px}h1{margin-bottom:2px}.board{width:min(calc((100dvh - 125px)*.72),calc(100vw - 26px),420px)}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main class="app">
+<header><p class="eyebrow">PMI ASTANA FORUM</p><h1>Не забудь забрать с форума!</h1><p class="sub">Найди 6 пар и собери все трофеи</p></header>
+<div class="status" aria-live="polite"><span id="progress">0 из 6</span><div class="track"><div class="fill" id="fill"></div></div></div>
+<div class="board-wrap"><div class="board" id="board" aria-label="Игровое поле, 12 карточек"></div></div>
+<footer>Нажимай на карточки и запоминай их</footer>
+</main>
+<div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="reward-title"><section class="reward"><div class="kicker" id="reward-kicker">ПАРА НАЙДЕНА!</div><div class="big-icon" id="reward-icon" aria-hidden="true"></div><h2 id="reward-title"></h2><p class="joke" id="reward-joke"></p><button class="continue" id="continue">Продолжить</button><p class="hint">Нажми, чтобы вернуться к карточкам</p></section></div>
+<script>
+'use strict';
+// Content is intentionally easy to edit: each entry produces two matching cards.
+const prizes=[
+ {id:'ideas',icon:'💡',name:'10 инсайтов',joke:'И 20 новых задач. Потому что хорошие идеи сами себя не реализуют.'},
+ {id:'contacts',icon:'🤝',name:'50 контактов',joke:'Вспомнить бы теперь, кто все эти люди!'},
+ {id:'selfie',icon:'📸',name:'Селфи со спикером',joke:'Теперь вы почти друзья. Осталось, чтобы спикер об этом узнал.'},
+ {id:'coffee',icon:'☕',name:'Кофейный передоз',joke:'Зато хватило энергии познакомиться даже с организаторами.'},
+ {id:'crush',icon:'💜',name:'Новая симпатия',joke:'Нетворкинг неожиданно вышел за рамки повестки.'},
+ {id:'ambition',icon:'🚀',name:'План изменить мир',joke:'Начну в понедельник. Сразу после проверки почты.'}
+];
+const board=document.getElementById('board');
+const overlay=document.getElementById('overlay');
+const cont=document.getElementById('continue');
+let first=null,locked=false,matched=new Set(),timeoutId=null;
+const cards=prizes.flatMap(p=>[p,p]);
+for(let i=cards.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[cards[i],cards[j]]=[cards[j],cards[i]];}
+function render(){board.innerHTML='';cards.forEach((p,i)=>{const b=document.createElement('button');b.className='card';b.type='button';b.setAttribute('aria-label','Закрытая карточка '+(i+1));b.innerHTML='<span class="back" aria-hidden="true">?</span><span class="face"><span class="symbol" aria-hidden="true"></span><span class="name"></span></span>';b.querySelector('.symbol').textContent=p.icon;b.querySelector('.name').textContent=p.name;b.addEventListener('click',()=>pick(b,p));board.appendChild(b);});}
+function show(b){b.classList.add('revealed');b.setAttribute('aria-label',b.querySelector('.name').textContent);}
+function hide(b){if(!b.classList.contains('matched')){b.classList.remove('revealed');b.setAttribute('aria-label','Закрытая карточка');}}
+function pick(b,p){
+ if(locked||b.classList.contains('matched'))return;
+ if(b===first?.el){clearTimeout(timeoutId);first=null;hide(b);return;}
+ show(b);
+ if(!first){first={el:b,id:p.id};timeoutId=setTimeout(()=>hide(b),900);return;}
+ locked=true;clearTimeout(timeoutId);const old=first;first=null;
+ if(old.id===p.id){
+  show(old.el);old.el.classList.add('matched');b.classList.add('matched');matched.add(p.id);
+  document.getElementById('progress').textContent=matched.size+' из '+prizes.length;
+  document.getElementById('fill').style.width=(matched.size/prizes.length*100)+'%';
+  setTimeout(()=>openReward(p),400);
+ }else{
+  timeoutId=setTimeout(()=>{hide(old.el);hide(b);locked=false;},900);
+ }
+}
+function openReward(p){
+ document.getElementById('reward-kicker').textContent='ПАРА НАЙДЕНА!';
+ document.getElementById('reward-icon').textContent=p.icon;
+ document.getElementById('reward-title').textContent=p.name;
+ document.getElementById('reward-joke').textContent=p.joke;
+ cont.textContent='Продолжить';overlay.classList.add('show');cont.focus();
+}
+cont.addEventListener('click',()=>{
+ overlay.classList.remove('show');
+ if(matched.size===prizes.length){
+  document.getElementById('reward-kicker').textContent='PMI ASTANA FORUM';
+  document.getElementById('reward-icon').textContent='🏆';
+  document.getElementById('reward-title').textContent='Поздравляем!';
+  document.getElementById('reward-joke').textContent='Ты ничего не забыл забрать с форума!';
+  cont.textContent='Сыграть ещё раз';overlay.classList.add('show');
+  cont.onclick=()=>location.reload();
+ }else{locked=false;}
+});
+render();
+</script>
+</body>
+</html>
